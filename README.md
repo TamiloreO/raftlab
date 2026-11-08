@@ -1,18 +1,14 @@
 # raftlab
 
-A Raft cluster you can watch, partition and break, running entirely in the browser.
+A five node Raft cluster you can watch, split and break, running in the browser.
 
-![Five nodes as sign plates, leader in yellow, seven committed entries](docs/demo.png)
+![Leader in yellow, followers in white, seven committed entries](docs/demo.png)
 
-A partitioned cluster, with the old leader marked stale and the majority side running a later term: [docs/partition.png](docs/partition.png).
+Raft is easier to understand when you can see it move. Click Partition and the leader ends up in the minority: the other side elects a new leader while the old one carries on calling itself leader, because nothing has told it otherwise. Click Heal and it steps down.
 
-## What it is
+Time is counted in ticks rather than seconds, so a seed replays a run exactly and the tests can assert on precise states.
 
-Raft is the consensus algorithm most distributed systems are built on, and it is unusually hard to learn from prose. Elections, log matching and what happens when a leader is cut off from the majority are all easier to understand when you can see them.
-
-This is a simulation of a five node cluster with the properties that matter made visible: who is leader and in which term, which log entries are committed and which are still in flight, which nodes are cut off from which, and why an old leader keeps calling itself leader after it has been deposed.
-
-The simulation is deterministic. No timers, no threads, no real network: every run advances through `tick()`, so a seed reproduces a run exactly and tests can assert on precise states. The browser app drives the same core that the tests exercise.
+![A partitioned cluster, old leader marked stale](docs/partition.png)
 
 ## Run it
 
@@ -22,68 +18,24 @@ cd raftlab
 python3 -m http.server 8080
 ```
 
-Open http://localhost:8080/.
+Then open http://localhost:8080/.
 
-Click **Partition** to split the cluster so that the leader ends up in the minority, and watch a new leader take over in a later term while the old one keeps calling itself leader. Click **Heal** and it steps down. Click a node to stop it and restart it. **Propose** appends a command to the current leader's log.
+## What the signs mean
 
-## Run the tests
+The leader has a yellow header and a stale leader wears red. Candidates are yellow, followers are white, and a stopped node is hatched. Dashed boxes are partitions, and the ticks under each node are log entries, filled for committed and hollow for still in flight.
+
+The look borrows the wayfinding skin from [style-labs](https://tamiloreo.github.io/style-labs/?s=industrial-wayfinding).
+
+## Tests
 
 ```bash
 npm test
 ```
 
-Ten tests, no dependencies, covering the safety properties rather than the happy path:
-
-| Test | Property |
-| --- | --- |
-| One leader | A cluster settles on exactly one leader, and followers agree who it is |
-| Replication | Entries reach every follower with matching index and term, and the commit index advances |
-| Terms only increase | No node ever moves its term backwards |
-| One leader per term | Across 200 ticks including a partition, no term ever has two leaders |
-| Partitioned minority | It cannot commit, and it cannot win a later term. The majority side elects |
-| Healing | The stale leader steps down, committed entries survive at the same index and term |
-| Conflicting suffix | Entries from an old term are truncated when the leader overwrites them |
-| Determinism | The same seed produces byte-identical state |
-| Leader death | Killing the leader produces a replacement, and reviving the old one does not disrupt it |
-| Single node | A one node cluster is its own quorum and commits immediately |
-
-One thing the tests had to learn the hard way: a partitioned old leader keeps reporting itself as leader, and that is correct. It cannot know it has been deposed until it talks to a majority. The property to assert is that it cannot **commit**, not that it stops calling itself leader.
-
-## How it works
-
-```
-src/raft.js   the algorithm: state, messages, elections, replication, partitions
-test/         node:test suites for the safety properties
-main.js       canvas visualiser, controls, no framework
-index.html    markup
-style.css     styling
-```
-
-The core exposes a `RaftCluster` with `step()`, `run(ticks)`, `propose(command)`, `setPartitions(groups)`, `heal()`, `kill(id)`, `revive(id)` and `snapshot()`. Time is measured in ticks: an election timeout of 14 to 34 ticks, a heartbeat every 3, and a message delay of 2 to 4 ticks. Those numbers are deliberately small so a viewer sees a full election in a couple of seconds, and everything about them is configurable.
-
-Messages carry a `start` and `due` tick so the renderer can interpolate them along the edge, which is why packets move smoothly while the simulation itself is discrete.
-
-## Reading the map
-
-The visual language is the industrial-wayfinding skin from [style-labs](https://tamiloreo.github.io/style-labs/?s=industrial-wayfinding), applied to a cluster: nodes are sign plates, states are sign families, partitions are zones, and messages are route arrows.
-
-| Element | Meaning |
-| --- | --- |
-| Yellow header, black body | The leader |
-| Red header, black body | A stale leader: deposed, cut off, and still calling itself leader |
-| Yellow body, black header | Candidate, standing for election |
-| White body, black header | Follower |
-| Hatched plate, grey header | Node stopped; click it to bring it back |
-| Dashed box with a ZONE label | A partition; messages crossing it are dropped |
-| Ticks under a plate | Log entries. Filled means committed, hollow means still in flight |
-| Arrow colour | Amber for vote requests, black for replication, grey for replies |
+Ten tests on the safety properties rather than the happy path: one leader, matching logs, terms that never go backwards, a partitioned minority that cannot commit, and identical state from the same seed.
 
 ## Limits
 
-No persistence, so a restart loses the log. No log compaction or snapshots, so the log grows forever. No membership changes, no pre-vote, no client request handling beyond appending to the leader. The network model drops messages across a partition but never reorders them, which is a simplification: real links reorder.
-
-These are listed in [ROADMAP.md](ROADMAP.md) with the work required to fix each.
-
-## License
+No persistence, no log compaction, no membership changes, and the network drops messages across a partition but never reorders them. Each is on the roadmap.
 
 [MIT](LICENSE) © Oluwatamilore Olufohunsi
