@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>raftlab</title>
+  <meta name="description" content="A deterministic Raft cluster you can partition, watch and break." />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header class="bar">
+    <div class="brand">
+      <h1>raftlab</h1>
+      <p>Five nodes, one leader, and a network you can cut in half</p>
+    </div>
+    <div class="controls">
+      <button id="play" class="btn primary" type="button">Pause</button>
+      <button id="split" class="btn" type="button">Partition</button>
+      <button id="heal" class="btn" type="button">Heal</button>
+      <button id="propose" class="btn" type="button">Propose</button>
+      <label class="speed">
+        <span>speed</span>
+        <select id="speed">
+          <option value="1">1x</option>
+          <option value="2" selected>2x</option>
+          <option value="4">4x</option>
+          <option value="8">8x</option>
+        </select>
+      </label>
+    </div>
+  </header>
+
+  <main>
+    <div class="stage">
+      <canvas id="canvas"></canvas>
+      <p class="hint">Click a node to stop and restart it. Partitions drop messages between the two groups.</p>
+    </div>
+
+    <section class="panels">
+      <div class="panel">
+        <h2>Cluster</h2>
+        <dl class="stats">
+          <div><dt>term</dt><dd id="stat-term">0</dd></div>
+          <div><dt>leader</dt><dd id="stat-leader">none</dd></div>
+          <div><dt>committed</dt><dd id="stat-commit">0</dd></div>
+          <div><dt>in flight</dt><dd id="stat-flight">0</dd></div>
+          <div><dt>dropped</dt><dd id="stat-dropped">0</dd></div>
+          <div><dt>ticks</dt><dd id="stat-tick">0</dd></div>
+        </dl>
+      </div>
+
+      <div class="panel">
+        <h2>Timeline</h2>
+        <ol class="trace" id="trace"></ol>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

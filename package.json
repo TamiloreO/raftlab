@@ -1,0 +1,23 @@
+{
+  "name": "raftlab",
+  "version": "0.1.0",
+  "description": "A deterministic Raft cluster you can watch, partition and break",
+  "type": "module",
+  "main": "src/raft.js",
+  "scripts": {
+    "test": "node --test test/*.test.js",
+    "start": "python3 -m http.server 8080"
+  },
+  "keywords": [
+    "raft",
+    "consensus",
+    "distributed-systems",
+    "visualiser",
+    "simulation"
+  ],
+  "author": "Oluwatamilore Olufohunsi",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  }
+}
