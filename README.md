@@ -2,7 +2,9 @@
 
 A Raft cluster you can watch, partition and break, running entirely in the browser.
 
-![Five nodes, one leader at term 2, three committed entries](docs/demo.png)
+![Five nodes as sign plates, leader in yellow, seven committed entries](docs/demo.png)
+
+A partitioned cluster, with the old leader marked stale and the majority side running a later term: [docs/partition.png](docs/partition.png).
 
 ## What it is
 
@@ -61,15 +63,20 @@ The core exposes a `RaftCluster` with `step()`, `run(ticks)`, `propose(command)`
 
 Messages carry a `start` and `due` tick so the renderer can interpolate them along the edge, which is why packets move smoothly while the simulation itself is discrete.
 
-## What the colours mean
+## Reading the map
+
+The visual language is the industrial-wayfinding skin from [style-labs](https://tamiloreo.github.io/style-labs/?s=industrial-wayfinding), applied to a cluster: nodes are sign plates, states are sign families, partitions are zones, and messages are route arrows.
 
 | Element | Meaning |
 | --- | --- |
-| Green ring, LEADER | Current leader |
-| Rose ring, STALE | A leader that has been superseded but does not know it yet, because it is cut off |
-| Amber ring, CANDIDATE | Standing for election |
-| Dashed line | The partition between those two nodes; messages across it are dropped |
-| Log squares | Entries, coloured by term. White outline means committed. Dim means still in flight |
+| Yellow header, black body | The leader |
+| Red header, black body | A stale leader: deposed, cut off, and still calling itself leader |
+| Yellow body, black header | Candidate, standing for election |
+| White body, black header | Follower |
+| Hatched plate, grey header | Node stopped; click it to bring it back |
+| Dashed box with a ZONE label | A partition; messages crossing it are dropped |
+| Ticks under a plate | Log entries. Filled means committed, hollow means still in flight |
+| Arrow colour | Amber for vote requests, black for replication, grey for replies |
 
 ## Limits
 
